@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>干扰峰复测档位诊断</title>
+    <link rel="icon" href="data:," />
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
+  </head>
+  <body>
+    <header class="topbar">
+      <div class="brand">
+        <h1>干扰峰复测档位诊断</h1>
+        <p>枚举 1～4 个疑似频率组合，按混叠规律折叠到 0～Nyquist，并与每次完整峰表精确核对。</p>
+      </div>
+      <div class="top-actions">
+        <button id="loadExampleBtn" type="button">载入内置示例</button>
+        <button id="resetBtn" type="button" class="ghost">清空输入</button>
+      </div>
+    </header>
+
+    <main class="layout">
+      <section class="card input-card">
+        <div class="section-title-row">
+          <h2>诊断输入</h2>
+          <span class="hint">所有频率均为整数 Hz</span>
+        </div>
+
+        <label class="field">
+          <span>疑似干扰频率（至多 32 个，逗号、空格或换行分隔）</span>
+          <textarea id="suspectsInput" rows="3" placeholder="例如：9400, 14000, 17400, 18300"></textarea>
+        </label>
+
+        <div class="section-title-row compact">
+          <h3>已测各档完整峰表</h3>
+          <button id="addObservationBtn" type="button" class="small">+ 增加档位</button>
+        </div>
+        <div id="observationsList" class="observations-list"></div>
+
+        <label class="field">
+          <span>可用复测采样率（逗号、空格或换行分隔）</span>
+          <textarea id="availableRatesInput" rows="2" placeholder="例如：11025, 16000, 48000"></textarea>
+        </label>
+        <div class="button-row" style="margin:-0.35rem 0 0.85rem">
+          <button id="noGearDemoBtn" type="button" class="small demo-ghost">演示“无合适档位”提示</button>
+        </div>
+
+        <button id="analyzeBtn" type="button" class="primary block">开始诊断</button>
+        <div id="formMessage" class="message" role="alert" aria-live="polite"></div>
+      </section>
+
+      <section class="results-column">
+        <div id="globalMessage" class="global-message" role="alert" aria-live="polite"></div>
+
+        <section class="card">
+          <h2>诊断结论</h2>
+          <div id="summaryContainer" class="summary-empty">正在载入内置示例…</div>
+          <div id="warningsContainer"></div>
+          <div id="frequencyContainer" class="frequency-grid"></div>
+        </section>
+
+        <section class="card">
+          <h2>一次测量分辨推荐</h2>
+          <div id="recommendationContainer" class="recommendation-empty">尚无诊断结果。</div>
+        </section>
+
+        <section class="card supplement-card">
+          <div class="section-title-row">
+            <h2>补录峰表</h2>
+            <span class="hint">无解时后端返回 409，页面保留补录前结果</span>
+          </div>
+          <div class="supplement-form">
+            <label class="field">
+              <span>补录采样率 Hz</span>
+              <input id="supplementRateInput" type="number" min="1" step="1" placeholder="11025" />
+            </label>
+            <label class="field grow">
+              <span>该档位完整峰表 Hz</span>
+              <input
+                id="supplementPeaksInput"
+                type="text"
+                placeholder="逗号或空格分隔，如：1625, 2975, 3750, 4650"
+              />
+            </label>
+          </div>
+          <div class="button-row wrap">
+            <button id="supplementBtn" type="button" class="primary">提交补录并更新诊断</button>
+            <button id="useRecommendedBtn" type="button">采用推荐档位</button>
+            <button id="fillValidDemoBtn" type="button" class="demo">填入有效演示峰表</button>
+            <button id="fillInvalidDemoBtn" type="button" class="demo-ghost">填入矛盾演示峰表</button>
+          </div>
+          <div id="supplementMessage" class="message" role="alert" aria-live="polite"></div>
+        </section>
+
+        <section class="card">
+          <div class="section-title-row">
+            <h2>可行候选组合</h2>
+            <span id="candidateCountPill" class="pill">0</span>
+          </div>
+          <div id="candidatesContainer" class="candidates-container"></div>
+        </section>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <span>折叠公式：alias(f, sr) = min(f mod sr, sr − (f mod sr))，范围 0～sr/2。</span>
+    </footer>
+
+    <script src="{{ url_for('static', filename='app.js') }}"></script>
+  </body>
+</html>
